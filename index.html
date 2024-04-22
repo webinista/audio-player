@@ -4,36 +4,107 @@
   <meta charset="utf-8" />
   <title>AudioPlayer</title>
   <style>
+  :root {
+    --track: #d6e8eb;
+    --thumb: #1874d0;
+  }
+  
+  @media (dark-mode) {
+    :root {
+      --track: #d6e8eb;
+      --thumb: #1874d0;
+    }
+  }
+  
   .audio-player {}
-  .audio-player-controls,
+  
   .audio-player-track {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
   }
   
   .audio-player-track {
-    :not(input) {
-      flex: 0 0 min-content;
+    display: grid;
+    grid-template-areas: "currentTime track duration";
+    grid-template-columns: min-content 1fr min-content;
+   
+    [type=range], progress {
+      grid-area: track;
+      width: 100%;
     }
-    input {
-      flex: 1 1 auto;
+    
+    [type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+
+      background: transparent;
+      
+      &::-moz-range-thumb {
+        background: var(--thumb);
+        border-color: transparent;
+        inline-size: 1.5rem;
+      }
+      
+      &::-webkit-slider-thumb {
+        background: var(--thumb);
+        border-color: transparent;
+        inline-size: 1.5rem;
+      }
+
+      &::slider-thumb {
+        background: var(--thumb);
+        border-color: transparent;
+        inline-size: 1.5rem;
+      }
     }
+    
+    progress {
+      -webkit-appearance: none;
+      appearance: none;
+      border-radius: 100rem;
+      overflow: hidden;
+
+      &::-moz-progress-bar {
+        background: var(--track);
+        border-color: transparent;
+      }
+
+      &::-webkit-progress-bar {
+        background: var(--track);
+      }
+
+      &::-webkit-progress-inner-element {
+        background: black;
+      }
+    }
+    
+    output {
+      grid-area: currentTime;
+    }
+
+    label {
+      grid-area: duration;
+    } 
   }
+
   .audio-player-controls {
     gap: .5rem;
     justify-content: end;
   }
+
+
   </style>
 </head>
 <body>
-
+<!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress -->
 <div class="audio-player">
   <audio preload="metadata" src="cash-in-lieu-of-fractional-shares.b015e028-9d6e-4107-9467-56532f694386.mp3" nodownload></audio>
   <h2>Listen to this post</h2>
   <form>
     <p class="audio-player-track">
-      <output name="current-time" for="audio-duration">0:00</output>
+      <output name="current-time" for="audio-progress">0:00</output>
+      <progress value="0" id="audio-progress" name="audio-progress"></progress>
       <input type="range" min="0" max="1" value="0" step="0.01" name="audio-duration" id="audio-duration">
       <label for="audio-duration">0:00</label>
     </p>
@@ -59,9 +130,9 @@ const formatTime = (seconds) => {
   const minutes = (seconds / SECONDS_IN_MINUTE);
   
   const minute_part = Math.floor(minutes);
-  const sec = minutes - minute_part;
+  const sec = SECONDS_IN_MINUTE * (minutes - minute_part);
 
-  return `${minute_part}:${(sec * SECONDS_IN_MINUTE).toPrecision(2)}`;
+  return `${minute_part}:${Math.round(sec).toString().padStart(2, 0)}`;
 }
 
 const actions = {
@@ -102,7 +173,6 @@ audios.querySelector('audio').addEventListener('durationchange', (evt) => {
 });
 
 audios.querySelector('[type=range]').addEventListener('input', (evt) => {
-  console.log(evt.type)
   const player = audios.querySelector('audio');
   const seekTo = actions.currentTime(evt.target.value, player.duration);
 
@@ -121,28 +191,40 @@ audios.addEventListener('click', (evt) => {
 
 audios.querySelector('audio').addEventListener('timeupdate', (evt) => {
   const target = evt.target;
-  const player = audios.querySelector('output');
+  const currentTime = audios.querySelector('output');
+  const time = actions.reflectTime(evt.target.currentTime, evt.target.duration);
 
-  if (target.time > 10) {
-    player.querySelector('[data-action=back]').removeAttribute('disabled');
+  if (target.currentTime > 10) {
+    audios.querySelector('[data-action=back]').removeAttribute('disabled');
+  } else {
+    audios.querySelector('[data-action=back]').setAttribute('disabled', true);
   }
   
-  if (target.time >= target.duration) {
-    player.querySelector('[data-action=forward]').setAttribute('disabled', true);
+  if (target.currentTime >= target.duration) {
+    audios.querySelector('[data-action=forward]').setAttribute('disabled', true);
+  } else {
+    audios.querySelector('[data-action=forward]').removeAttribute('disabled');
   }
   
-  const range = evt.target.parentNode.querySelector('[type=range]');
-  range.value = actions.reflectTime(evt.target.currentTime, evt.target.duration);
-  player.value = formatTime(evt.target.currentTime);
+  const range = audios.querySelector('[type=range]');
+  const progress = audios.querySelector('progress');
+
+  range.value = time;
+  progress.value = range.value;
+  
+  currentTime.value = formatTime(evt.target.currentTime);
 });
 
 audios.querySelector('audio').addEventListener('ended', (evt) => {
   const target = evt.target;
-  target.parentNode.querySelector('[data-action=forward]').setAttribute('disabled', true);
+  audios.querySelector('[data-action=forward]').setAttribute('disabled', true);
+  audios.querySelector('[data-action=play]').removeAttribute('hidden');
+  audios.querySelector('[data-action=stop]').setAttribute('hidden', true);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
   audios.querySelector('input').value = 0;
+  audios.querySelector('progress').value = 0;
 })
 
 </script>
