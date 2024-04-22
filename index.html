@@ -3,6 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <title>AudioPlayer</title>
+  <style>
+  .audio-player {}
+  .audio-player-controls,
+  .audio-player-track {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  
+  .audio-player-track {
+    :not(input) {
+      flex: 0 0 min-content;
+    }
+    input {
+      flex: 1 1 auto;
+    }
+  }
+  .audio-player-controls {
+    gap: .5rem;
+    justify-content: end;
+  }
+  </style>
 </head>
 <body>
 
@@ -10,41 +32,79 @@
   <audio preload="metadata" src="cash-in-lieu-of-fractional-shares.b015e028-9d6e-4107-9467-56532f694386.mp3" nodownload></audio>
   <h2>Listen to this post</h2>
   <form>
-    <output>0:00</output>
-    <input type="range" min="0" max="1" value="0" step="0.01" id="audio-duration">
-    <label for="audio-duration">0:00</label>
+    <p class="audio-player-track">
+      <output name="current-time" for="audio-duration">0:00</output>
+      <input type="range" min="0" max="1" value="0" step="0.01" name="audio-duration" id="audio-duration">
+      <label for="audio-duration">0:00</label>
+    </p>
+    <p class="audio-player-controls">
+      <button type="button" aria-label="Go back 10 seconds" data-action="back" disabled>
+        Go back 10 seconds
+      </button>
+      <button type="button" data-action="play" aria-label="Play audio">Play</button>
+      <button type="button" data-action="stop" aria-label="Pause audio" hidden>Pause</button>
+      <button type="button" data-action="forward" aria-label="Skip ahead 10 seconds">
+        Skip ahead 10 seconds
+      </button>
+    </p>
   </form>
-  <button type="button" data-action="back" disabled>Go back 10 seconds</button>
-  <button type="button" data-action="play">Play</button>
-  <button type="button" data-action="stop">Pause</button>
-  <button type="button" data-action="forward">Skip ahead 10 seconds</button>
 </div>
 
 
-<script>
-/************************
-TODO: 
-https://date-fns.org/v3.6.0/docs/secondsToMinutes
-*************************/
-
+<script type="module">
 const audios = document.querySelector('.audio-player');
 
+const formatTime = (seconds) => {
+  const SECONDS_IN_MINUTE = 60;
+  const minutes = (seconds / SECONDS_IN_MINUTE);
+  
+  const minute_part = Math.floor(minutes);
+  const sec = minutes - minute_part;
+
+  return `${minute_part}:${(sec * SECONDS_IN_MINUTE).toPrecision(2)}`;
+}
+
 const actions = {
-  play: (aud) => aud.play(),
-  stop: (aud) => aud.pause(),
-  back: (aud) => (aud.currentTime = aud.currentTime - 10),
-  forward: (aud) => (aud.currentTime = aud.currentTime + 10),
+  play: (target, aud) => {
+    aud.play();
+    target.toggleAttribute('hidden');
+    target.parentNode.querySelector('[data-action=stop]').toggleAttribute('hidden');
+    
+    if(aud.currentTime >= 10) {
+      aud.parentNode.querySelector('[data-action=back]').removeAttribute('disabled')
+    }
+    if(aud.currentTime < 10) {
+      aud.parentNode.querySelector('[data-action=back]').setAttribute('disabled', true)
+    }
+  },
+  stop: (target, aud) => {
+    aud.pause();
+    target.toggleAttribute('hidden');
+    target.parentNode.querySelector('[data-action=play]').toggleAttribute('hidden');
+  },
+  back: (target, aud) => {
+    aud.currentTime = aud.currentTime - 10;
+    aud.parentNode.querySelector('[data-action=forward]').removeAttribute('disabled');
+  },
+  forward: (target, aud) => (aud.currentTime = aud.currentTime + 10),
+  currentTime: (value, duration) => {
+    return Math.round(+value * duration);
+  },
+  reflectTime: (currentTime, duration) => {
+    return currentTime / duration;
+  }
 };
 
-audios.querySelector('audio').addEventListener('loadedmetadata', (evt) => {
-  const dur = evt.target.parentNode.querySelector('[for=audio-duration]');
-  const seconds = document.createTextNode(Math.round(evt.target.duration));
+audios.querySelector('audio').addEventListener('durationchange', (evt) => {
+  const dur = evt.target.parentNode.querySelector('label[for=audio-duration]');
+  const seconds = document.createTextNode(formatTime(evt.target.duration));
   dur.replaceChild(seconds, dur.firstChild);
 });
 
 audios.querySelector('[type=range]').addEventListener('input', (evt) => {
+  console.log(evt.type)
   const player = audios.querySelector('audio');
-  const seekTo = Math.round(+evt.target.value * player.duration);
+  const seekTo = actions.currentTime(evt.target.value, player.duration);
 
   if('fastSeek' in player) {
     player.fastSeek(seekTo);
@@ -55,7 +115,34 @@ audios.querySelector('[type=range]').addEventListener('input', (evt) => {
 
 audios.addEventListener('click', (evt) => {
   if (evt.target.nodeName !== 'BUTTON') return false;
-  console.log(evt.target.dataset.action)
+  const aud = audios.querySelector('audio');
+  actions[evt.target.dataset.action](evt.target, aud);
+});
+
+audios.querySelector('audio').addEventListener('timeupdate', (evt) => {
+  const target = evt.target;
+  const player = audios.querySelector('output');
+
+  if (target.time > 10) {
+    player.querySelector('[data-action=back]').removeAttribute('disabled');
+  }
+  
+  if (target.time >= target.duration) {
+    player.querySelector('[data-action=forward]').setAttribute('disabled', true);
+  }
+  
+  const range = evt.target.parentNode.querySelector('[type=range]');
+  range.value = actions.reflectTime(evt.target.currentTime, evt.target.duration);
+  player.value = formatTime(evt.target.currentTime);
+});
+
+audios.querySelector('audio').addEventListener('ended', (evt) => {
+  const target = evt.target;
+  target.parentNode.querySelector('[data-action=forward]').setAttribute('disabled', true);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  audios.querySelector('input').value = 0;
 })
 
 </script>
