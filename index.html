@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="utf-8" />
+  <title>AudioPlayer</title>
+</head>
+<body>
+
+<div class="audio-player">
+  <audio preload="metadata" src="cash-in-lieu-of-fractional-shares.b015e028-9d6e-4107-9467-56532f694386.mp3" nodownload></audio>
+  <h2>Listen to this post</h2>
+  <form>
+    <output>0:00</output>
+    <input type="range" min="0" max="1" value="0" step="0.01" id="audio-duration">
+    <label for="audio-duration">0:00</label>
+  </form>
+  <button type="button" data-action="back" disabled>Go back 10 seconds</button>
+  <button type="button" data-action="play">Play</button>
+  <button type="button" data-action="stop">Pause</button>
+  <button type="button" data-action="forward">Skip ahead 10 seconds</button>
+</div>
+
+
+<script>
+/************************
+TODO: 
+https://date-fns.org/v3.6.0/docs/secondsToMinutes
+*************************/
+
+const audios = document.querySelector('.audio-player');
+
+const actions = {
+  play: (aud) => aud.play(),
+  stop: (aud) => aud.pause(),
+  back: (aud) => (aud.currentTime = aud.currentTime - 10),
+  forward: (aud) => (aud.currentTime = aud.currentTime + 10),
+};
+
+audios.querySelector('audio').addEventListener('loadedmetadata', (evt) => {
+  const dur = evt.target.parentNode.querySelector('[for=audio-duration]');
+  const seconds = document.createTextNode(Math.round(evt.target.duration));
+  dur.replaceChild(seconds, dur.firstChild);
+});
+
+audios.querySelector('[type=range]').addEventListener('input', (evt) => {
+  const player = audios.querySelector('audio');
+  const seekTo = Math.round(+evt.target.value * player.duration);
+
+  if('fastSeek' in player) {
+    player.fastSeek(seekTo);
+  } else {
+    player.currentTime = seekTo;
+  }
+});
+
+audios.addEventListener('click', (evt) => {
+  if (evt.target.nodeName !== 'BUTTON') return false;
+  console.log(evt.target.dataset.action)
+})
+
+</script>
+
+
+</body>
+</html>
