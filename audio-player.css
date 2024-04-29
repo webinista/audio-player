@@ -1,188 +1,193 @@
-:root {
-    color-scheme: light dark;
-    --container-bg: var(--homepage-link-bg);
-    --track: #fb978c;
-    --thumb: #1874d0;
-    --track-bg: #999;
-    --progress-bg: #fb978c;
-  }
-  
-  @media screen and (prefers-color-scheme: dark) {
-    :root {
-      --container-bg: var(--homepage-link-bg);
-      --track: hsl(355, 90%, 75%);
-      --thumb: whitesmoke;
-      --track-bg: #9997;
-    }
-  }
-  
+.audio-player {
+  font: inherit;
+  color-scheme: light dark;
+  --container-bg: var(--homepage-link-bg);
+  --track: #fb978c;
+  --thumb: #1874d0;
+  --track-bg: #999;
+  --progress-bg: #fb978c;
+}
+
+@media screen and (prefers-color-scheme: dark) {
   .audio-player {
-    background: var(--container-bg);
-    border: 1px solid hsl(var(--hue-underline), 50%, 80%);
-    border-radius: .5rem;
-    font-size: 2rem;
-    line-height: 1;
-    margin-block: 2rem;
-    padding: 1.4rem;
+    --container-bg: var(--homepage-link-bg);
+    --track: hsl(355, 90%, 75%);
+    --thumb: whitesmoke;
+    --track-bg: #9997;
+  }
+}
+
+.audio-player {
+  background: var(--container-bg);
+  border: 1px solid hsl(var(--hue-underline), 50%, 80%);
+  border-radius: .5rem;
+  font-size: 2rem;
+  line-height: 1;
+  margin-block: 2rem;
+  padding: 1.4rem;
+  
+  h2 {
+    font-size: 3rem;
+    margin-block: 0;
+  }
+  
+  p {
+    margin-block: 1.4rem 0;
+  }
+  
+  svg {
+    block-size: 4.4rem;
+    inline-size: auto;
+    pointer-events: none;
     
-    h2 {
-      font-size: 3rem;
-      margin-block: 0;
-    }
-    
-    p {
-      margin-block: 1.4rem 0;
-    }
-    
-    svg {
-      block-size: 4.4rem;
-      inline-size: auto;
-      pointer-events: none;
-      
-      path {
-        fill: hsl(188.6, 34.4%, 18%);
-      }
-    }
-    
-    button {
-      background: hsl(188.6, 34.4%, 68%);
-      border: 0;
-      border-radius: 0.3rem;
-      line-height: inherit;
-      
-      @media screen and (prefers-color-scheme: dark) {
-        background: hsla(188.6, 34.4%, 68%, .5);
-      }
-      
-      &:disabled {
-        cursor: not-allowed;
-        opacity: .7;
-      }
-    }
-    
-    progress {
-      block-size: 4rem;
+    path {
+      fill: hsl(188.6, 34.4%, 18%);
     }
   }
   
-  .audio-player-track {
-    align-items: center;
-    gap: 1rem;
+  button {
+    background: hsl(188.6, 34.4%, 68%);
+    border: 0;
+    border-radius: 0.3rem;
+    line-height: inherit;
+    
+    @media screen and (prefers-color-scheme: dark) {
+      background: hsla(188.6, 34.4%, 68%, .5);
+    }
+    
+    &:disabled {
+      cursor: not-allowed;
+      opacity: .7;
+    }
   }
   
-  .audio-player-track {
-    display: grid;
-    grid-template-areas: "currentTime track duration";
-    grid-template-columns: min-content 1fr min-content;
-   
-    [type=range], progress {
-      grid-area: track;
-      width: 100%;
-    }
-    
-    [type=range] {
-      -webkit-appearance: none;
-      appearance: none;
-      background: transparent;
-      
-      &::-webkit-slider-runnable-track {
-        background: transparent;
-      }
-      
-      &::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        background: var(--thumb);
-        inline-size: 6rem;
-        block-size: 4rem;
-        border-radius: 100rem;
-      }
-    }
-
-    [type=range] {
-      -webkit-appearance: none;
-      appearance: none;
-
-      &::-moz-range-track {
-        background: transparent;
-      }
-          
-      &::-moz-range-thumb {
-        background: var(--thumb);
-        inline-size: 6rem;
-        block-size: 4rem;
-        border-radius: 100rem;
-      }
-
-      &::slider-thumb {
-        background: var(--thumb);
-        border-color: transparent;
-        inline-size: 6rem;
-        block-size: 4rem;
-        border-radius: 100rem;
-      }
-    }
-    
-    progress {
-      appearance: none;
-      border-radius: 100rem;
-      overflow: hidden;
-      background: var(--track-bg);
-
-      &::-moz-progress-bar {
-        background: var(--track);
-        border-color: transparent;
-      }
-    }
-    
-    output {
-      grid-area: currentTime;
-    }
-
-    label {
-      grid-area: duration;
-    }
-    
-    progress {
-      appearance: none;
-      border-radius: 100rem;
-      overflow: hidden;
-      background: var(--track-bg);
-    }
+  progress {
+    block-size: 4rem;
   }
+}
 
-  .audio-player-controls {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
+.audio-player-track {
+  align-items: center;
+  gap: 1rem;
+}
+
+.audio-player-track {
+  display: grid;
+  grid-template-areas: "currentTime track duration";
+  grid-template-columns: min-content 1fr min-content;
+ 
+  [type=range], progress {
+    grid-area: track;
+    width: 100%;
   }
-
-  .audio-player-track progress {
+  
+  [type=range] {
     -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
     
-    &::-webkit-progress-value {
+    &::-webkit-slider-runnable-track {
+      background: transparent;
+    }
+    
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--thumb);
+      inline-size: 6rem;
+      block-size: 4rem;
+      border-radius: 100rem;
+    }
+  }
+
+  [type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+
+    &::-moz-range-track {
+      background: transparent;
+    }
+        
+    &::-moz-range-thumb {
+      background: var(--thumb);
+      inline-size: 6rem;
+      block-size: 4rem;
+      border-radius: 100rem;
+    }
+
+    &::slider-thumb {
+      background: var(--thumb);
+      border-color: transparent;
+      inline-size: 6rem;
+      block-size: 4rem;
+      border-radius: 100rem;
+    }
+  }
+  
+  progress {
+    appearance: none;
+    border-radius: 100rem;
+    overflow: hidden;
+    background: var(--track-bg);
+
+    &::-moz-progress-bar {
       background: var(--track);
       border-color: transparent;
     }
+  }
+  
+  output, label {
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  
+  output {
+    grid-area: currentTime;
+  }
 
-    &::-webkit-progress-bar {
-      background: var(--track-bg);
-    }
+  label {
+    grid-area: duration;
+  }
+  
+  progress {
+    appearance: none;
+    border-radius: 100rem;
+    overflow: hidden;
+    background: var(--track-bg);
+  }
+}
+
+.audio-player-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.audio-player-track progress {
+  -webkit-appearance: none;
+  
+  &::-webkit-progress-value {
+    background: var(--track);
+    border-color: transparent;
+  }
+
+  &::-webkit-progress-bar {
+    background: var(--track-bg);
+  }
+  
+  &::-webkit-progress-inner-element {
+    background: black;
+    border-radius: 100rem;
+    overflow: hidden;
+  }
+}
+  
+@media screen and (prefers-color-scheme: dark)  {
+  .audio-player {
+    border-color: transparent;
     
-    &::-webkit-progress-inner-element {
-      background: black;
-      border-radius: 100rem;
-      overflow: hidden;
+    svg path {
+      fill: #f5f5f5bb;
     }
   }
+}      
     
-  @media screen and (prefers-color-scheme: dark)  {
-    .audio-player {
-      border-color: transparent;
-      
-      svg path {
-        fill: #f5f5f5bb;
-      }
-    }
-  }      
-      
