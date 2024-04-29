@@ -9,7 +9,38 @@ class AudioPlayer extends HTMLElement {
   setStyle() {
     const style = document.createElement('link');
     style.setAttribute('rel', 'stylesheet');
+    style.setAttribute('type', 'text/css');
+    style.setAttribute('href', 'audio-player.css');
     return style;
+  }
+
+  controlIcon(type) {
+    let icon;
+
+    switch(type) {
+      case 'pause':
+        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Pause audio</title><path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z"/></svg>';
+        break;
+      case 'back':
+        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Go back 10 seconds</title><path d="M4 5h3v10H4V5zm12 0v10l-9-5 9-5z"/></svg>';
+        break;
+      case 'forward':
+        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Go forward 10 seconds</title><path d="M13 5h3v10h-3V5zM4 5l9 5-9 5V5z"/></svg>';
+        break;
+      default:
+        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Play audio</title><path d="M4 4l12 6-12 6z"/></svg>';
+    }
+
+    return icon;
+  }
+
+  makeButton(action='play', aria='Play audio', icon) {
+    const button =  document.createElement('button');
+    button.setAttribute('type', 'button');
+    button.setAttribute('aria-label', aria);
+    button.setAttribute('data-action', action);
+    button.innerHTML = icon;
+    return button;
   }
 
   getTitle() {
@@ -75,30 +106,29 @@ class AudioPlayer extends HTMLElement {
     trackFrag.appendChild(label);
     track.appendChild(trackFrag);
 
-    const backup =  document.createElement('button');
-    backup.setAttribute('type', 'button');
-    backup.setAttribute('aria-label', 'Go back 10 seconds');
-    backup.setAttribute('data-action', 'back');
-    backup.disabled = true;
-    backup.textContent = 'Go back 10 seconds';
+    const backup =  this.makeButton(
+      'back',
+      'Go back 10 seconds',
+      this.controlIcon('back')
+    );
 
-    const play =  document.createElement('button');
-    play.setAttribute('type', 'button');
-    play.setAttribute('aria-label', 'Play audio');
-    play.setAttribute('data-action', 'play');
-    play.textContent = 'Play';
+    const play =  this.makeButton(
+      'play',
+      'Play audio',
+      this.controlIcon('play')
+    );
 
-    const pause =  document.createElement('button');
-    pause.setAttribute('type', 'button');
-    pause.setAttribute('aria-label', 'Pause audio');
-    pause.setAttribute('data-action', 'pause');
-    pause.textContent = 'Pause';
+    const pause =  this.makeButton(
+      'pause',
+      'Pause audio',
+      this.controlIcon('pause')
+    );
 
-    const forward =  document.createElement('button');
-    forward.setAttribute('type', 'button');
-    forward.setAttribute('aria-label', 'Skip ahead 10 seconds');
-    forward.setAttribute('data-action', 'forward');
-    forward.textContent = 'Skip ahead 10 seconds';
+    const forward =  this.makeButton(
+      'forward',
+      'Go back 10 seconds',
+      this.controlIcon('forward')
+    )
 
     const controls = document.createElement('p');
     controls.setAttribute('class', 'audio-player-controls');
