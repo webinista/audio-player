@@ -5,19 +5,31 @@
   <title>AudioPlayer</title>
   <style>
   :root {
-    --track: #d6e8eb;
+    --container-bg: #d6e8eb;
+    --track: #fb978c;
     --thumb: #1874d0;
+    --track-bg: #999;
+    --progress-bg: #fb978c;
   }
   
   @media (dark-mode) {
     :root {
-      --track: #d6e8eb;
+      --value: #d6e8eb;
       --thumb: #1874d0;
+      --track-bg: #e6e6e6;
     }
   }
   
-  .audio-player {}
-  
+  .audio-player {
+    background: var(--container-bg);
+    border-radius: .5rem;
+    padding: 1rem;
+    
+    h2 {
+      margin-block: 0;
+    }
+  }
+
   .audio-player-track {
     display: flex;
     align-items: center;
@@ -37,16 +49,31 @@
     [type=range] {
       -webkit-appearance: none;
       appearance: none;
-
       background: transparent;
       
-      &::-moz-range-thumb {
-        background: var(--thumb);
-        border-color: transparent;
-        inline-size: 1.5rem;
+      &::-webkit-slider-runnable-track {
+        background: transparent;
       }
       
       &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        background: var(--thumb);
+        inline-size: 1.5rem;
+        block-size: 1rem;
+        border-radius: 100rem;
+      }
+    }
+
+    [type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+
+      &::-moz-range-track {
+        background: transparent;
+      }
+          
+      &::-moz-range-thumb {
         background: var(--thumb);
         border-color: transparent;
         inline-size: 1.5rem;
@@ -60,22 +87,14 @@
     }
     
     progress {
-      -webkit-appearance: none;
       appearance: none;
       border-radius: 100rem;
       overflow: hidden;
+      background: var(--track-bg);
 
       &::-moz-progress-bar {
         background: var(--track);
         border-color: transparent;
-      }
-
-      &::-webkit-progress-bar {
-        background: var(--track);
-      }
-
-      &::-webkit-progress-inner-element {
-        background: black;
       }
     }
     
@@ -93,7 +112,27 @@
     justify-content: end;
   }
 
+  .audio-player-track progress {
+    -webkit-appearance: none;
+    
+    &::-webkit-progress-value {
+      background: var(--track);
+      border-color: transparent;
+    }
 
+    &::-webkit-progress-bar {
+      background: var(--track-bg);
+    }
+    
+    &::-webkit-progress-inner-element {
+      background: black;
+      border-radius: 100rem;
+      overflow: hidden;
+    }
+  }
+
+       
+      
   </style>
 </head>
 <body>
