@@ -1,0 +1,17 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": "airbnb",
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "rules": {
+      "react/function-component-definition": 0,
+      "react/prop-types": 0,
+      "semi": 0,
+     "jsx-a11y/label-has-associated-control": 0 /* This rule gets triggered even when the input is associated. */
+    }
+}
