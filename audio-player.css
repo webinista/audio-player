@@ -175,8 +175,6 @@
       overflow: hidden;
     }
   }
-
-   
     
   @media screen and (prefers-color-scheme: dark)  {
     .audio-player {
