@@ -264,6 +264,12 @@ class AudioPlayer extends HTMLElement {
     audio.addEventListener('durationchange', this.onDurationChange);
     audio.addEventListener('timeupdate', this.onTimeUpdate);
 
+    audio.addEventListener('play', (e) => {
+      const playButton = audio.parentElement.querySelector('[data-action=play]');
+      const click = new Event('click');
+      playButton.dispatchEvent(click);
+    });
+
     return audio;
   }
 
@@ -288,6 +294,12 @@ class AudioPlayer extends HTMLElement {
 
     apWrapper.appendChild(trackAndControls);
     shadow.appendChild(apWrapper);
+
+    shadow.addEventListener('keydown', (e) => {
+      if(shadow.activeElement.id === 'audio-duration' && e.code === 'Enter') {
+        audio.play();
+      }
+    });
   }
 }
 
