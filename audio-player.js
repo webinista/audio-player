@@ -173,19 +173,21 @@ class AudioPlayer extends HTMLElement {
   play(domEvent) {
     const { target } = domEvent;
     const audioEl = target.parentElement.parentElement.previousElementSibling;
+    const pause = target.parentElement.querySelector('[data-action=stop]');
 
     const forward = target.parentElement.querySelector('[data-action=forward]');
     forward.removeAttribute('disabled');
 
     audioEl.play();
     target.setAttribute('hidden', true);
-    target.parentElement.querySelector('[data-action=stop]').removeAttribute('hidden');
+    pause.removeAttribute('hidden');
+    pause.focus();
 
     if (audioEl.currentTime >= 10) {
       audioEl.parentNode.querySelector('[data-action=back]').removeAttribute('disabled')
     }
 
-    if (audioEl.currentTime < 10) {
+    if (audioEl.currentTime < 4) {
       audioEl.parentNode.querySelector('[data-action=back]').setAttribute('disabled', true)
     }
   }
@@ -195,10 +197,11 @@ class AudioPlayer extends HTMLElement {
     const audioEl = target.parentElement.parentElement.previousElementSibling;
 
     audioEl.pause();
+    target.setAttribute('hidden', true);
+
     const play = target.parentElement.querySelector('[data-action=play]');
     play.removeAttribute('hidden');
-
-    target.setAttribute('hidden', true);
+    play.focus();
   }
 
   back(domEvent) {
@@ -207,14 +210,14 @@ class AudioPlayer extends HTMLElement {
     const forward = target.parentElement.querySelector('[data-action=forward]');
     forward.removeAttribute('disabled');
 
-    const goback = audioEl.currentTime - 10;
+    const goback = audioEl.currentTime -= 10;
     return goback;
   }
 
   forward(domEvent) {
     const { target } = domEvent;
     const audioEl = target.parentElement.parentElement.previousElementSibling;
-    const ahead = audioEl.currentTime + 10;
+    const ahead = audioEl.currentTime += 10;
 
     return ahead;
   }
