@@ -201,7 +201,7 @@
 </head>
 <body>
 <!-- https://developer.mozilla.org/en-US/docs/Web/HTML/Element/progress -->
-<div class="audio-player">
+<!-- <div class="audio-player">
   <audio preload="metadata" src="cash-in-lieu-of-fractional-shares.b015e028-9d6e-4107-9467-56532f694386.mp3" nodownload></audio>
   <h2>Listen to this post</h2>
   <form>
@@ -222,7 +222,7 @@
       </button>
     </p>
   </form>
-</div>
+</div> -->
 
 
 <audio-player
@@ -230,7 +230,7 @@
 ></audio-player>
 
 <script type="module">
-const audios = document.querySelector('.audio-player');
+/* const audios = document.querySelector('.audio-player');
 
 const formatTime = (seconds) => {
   const SECONDS_IN_MINUTE = 60;
@@ -332,7 +332,11 @@ audios.querySelector('audio').addEventListener('ended', (evt) => {
 document.addEventListener('DOMContentLoaded', () => {
   audios.querySelector('input').value = 0;
   audios.querySelector('progress').value = 0;
-})
+});
+
+document.addEventListener('keypress', (evt) => {
+  console.log(evt.target.keyCode)
+}); */
 
 </script>
 
