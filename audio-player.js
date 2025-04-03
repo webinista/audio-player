@@ -53,7 +53,6 @@ class AudioPlayer extends HTMLElement {
     return icon;
   }
 
-  // eslint-disable-next-line default-param-last
   makeButton(action = 'play', aria = 'Play audio', handler = null, icon) {
     const button = document.createElement('button');
     button.setAttribute('type', 'button');
@@ -264,7 +263,7 @@ class AudioPlayer extends HTMLElement {
     audio.addEventListener('durationchange', this.onDurationChange);
     audio.addEventListener('timeupdate', this.onTimeUpdate);
 
-    audio.addEventListener('play', (e) => {
+    audio.addEventListener('play', () => {
       const playButton = audio.parentElement.querySelector('[data-action=play]');
       const click = new Event('click');
       playButton.dispatchEvent(click);
