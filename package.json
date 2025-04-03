@@ -1,16 +1,13 @@
 {
   "source": "index.html",
   "scripts": {
-    "lint": "npx eslint ./src/**.jsx"
+    "lint": "npx eslint ./**.js"
   },
   "devDependencies": {
-    "buffer": "^6.0.3",
-    "eslint": "^8.57.0",
-    "eslint-config-airbnb": "^19.0.4",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-jsx-a11y": "^6.8.0",
-    "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "process": "^0.11.10"
+    "@eslint/js": "^9.23.0",
+    "globals": "^16.0.0"
+  },
+  "dependencies": {
+    "eslint": "^9.23.0"
   }
 }
