@@ -23,6 +23,12 @@ class AudioPlayer extends HTMLElement {
   constructor() {
     super();
     this.onDurationChange = this.onDurationChange.bind(this);
+    this.audioPlayer = null;
+    this.play = this.play.bind( this );
+    this.stop = this.stop.bind( this );
+    this.forward = this.forward.bind( this );
+    this.back = this.back.bind( this );
+    this.onTimeUpdate = this.onTimeUpdate.bind( this );
   }
 
   setStyle() {
@@ -33,36 +39,6 @@ class AudioPlayer extends HTMLElement {
     return style;
   }
 
-  controlIcon(type) {
-    let icon;
-
-    switch (type) {
-      case 'stop':
-        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Pause audio</title><path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z"/></svg>';
-        break;
-      case 'back':
-        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Go back 10 seconds</title><path d="M4 5h3v10H4V5zm12 0v10l-9-5 9-5z"/></svg>';
-        break;
-      case 'forward':
-        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Go forward 10 seconds</title><path d="M13 5h3v10h-3V5zM4 5l9 5-9 5V5z"/></svg>';
-        break;
-      default:
-        icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Play audio</title><path d="M4 4l12 6-12 6z"/></svg>';
-    }
-
-    return icon;
-  }
-
-  makeButton(action = 'play', aria = 'Play audio', handler = null, icon) {
-    const button = document.createElement('button');
-    button.setAttribute('type', 'button');
-    button.setAttribute('aria-label', aria);
-    button.setAttribute('data-action', action);
-    button.innerHTML = icon;
-    button.addEventListener('click', handler);
-    return button;
-  }
-
   getTitle() {
     let title = 'Listen to this post';
     if (this.hasAttribute('title')) {
@@ -71,31 +47,23 @@ class AudioPlayer extends HTMLElement {
     return title;
   }
 
-  makeTitle() {
-    const h2 = document.createElement('h2');
-    h2.textContent = this.getTitle();
-    return h2;
+  setSrc() {
+    if( !this.audioPlayer ) return;
+
+    const aud = this.getAudioEl();
+
+    if (this.hasAttribute('src')) {
+      aud.setAttribute('src', this.getAttribute('src'));
+    }
   }
 
   makeTrack() {
-    const curTime = document.createElement('output');
-    curTime.setAttribute('name', 'current-time');
-    curTime.setAttribute('for', 'audio-progress');
+    if(!this.audioPlayer) return;
+
+    const curTime = this.audioPlayer.querySelector('output');
     curTime.textContent = '0:00';
 
-    const progress = document.createElement('progress');
-    progress.setAttribute('value', 0);
-    progress.setAttribute('id', 'audio-progress');
-    progress.setAttribute('name', 'audio-progress');
-
-    const scrub = document.createElement('input');
-    scrub.setAttribute('type', 'range');
-    scrub.setAttribute('min', 0);
-    scrub.setAttribute('max', 1);
-    scrub.setAttribute('value', 0);
-    scrub.setAttribute('step', 0.01);
-    scrub.setAttribute('name', 'audio-duration');
-    scrub.setAttribute('id', 'audio-duration');
+    const scrub = this.audioPlayer.querySelector('input');
     scrub.addEventListener('input', (domEvent) => {
       const { target } = domEvent;
       const audio = target.parentElement.parentElement.previousElementSibling;
@@ -108,195 +76,217 @@ class AudioPlayer extends HTMLElement {
       }
     });
 
-    const label = document.createElement('label');
-    label.setAttribute('for', 'audio-duration');
+    const label = this.audioPlayer.querySelector('label[for="audio-duration"]');
     label.textContent = '0:00';
-
-    const trackFrag = document.createDocumentFragment();
-    trackFrag.appendChild(curTime);
-    trackFrag.appendChild(progress);
-    trackFrag.appendChild(scrub);
-    trackFrag.appendChild(label);
-
-    const track = document.createElement('p');
-    track.setAttribute('class', 'audio-player-track');
-    track.appendChild(trackFrag);
-
-    return track;
   }
 
-  makeControls() {
-    const back = this.makeButton(
-      'back',
-      'Go back 10 seconds',
-      this.back,
-      this.controlIcon('back'),
-    );
+  setControls() {
+    if( !this.audioPlayer ) return;
+    const buttons = this.audioPlayer.querySelectorAll('button');
 
-    const play = this.makeButton(
-      'play',
-      'Play audio',
-      this.play,
-      this.controlIcon('play'),
-    );
+    buttons.forEach( (b) => {
+      if( b.dataset.action ) {
+        const { action } = b.dataset;
+        b.addEventListener( 'click', this[ action ] );
+      }
+    });
 
-    const pause = this.makeButton(
-      'stop',
-      'Stop audio',
-      this.stop,
-      this.controlIcon('stop'),
-    );
-
-    const forward = this.makeButton(
-      'forward',
-      'Go forward 10 seconds',
-      this.forward,
-      this.controlIcon('forward'),
-    );
-
-    pause.setAttribute('hidden', true);
-
-    const controlFrag = document.createDocumentFragment();
-    controlFrag.appendChild(back);
-    controlFrag.appendChild(play);
-    controlFrag.appendChild(pause);
-    controlFrag.appendChild(forward);
-
-    const controls = document.createElement('p');
-    controls.setAttribute('class', 'audio-player-controls');
-    controls.appendChild(controlFrag);
-
-    return controls;
   }
 
-  play(domEvent) {
-    const { target } = domEvent;
-    const audioEl = target.parentElement.parentElement.previousElementSibling;
-    const pause = target.parentElement.querySelector('[data-action=stop]');
+  play() {
+    if( !this.audioPlayer ) return;
 
-    const forward = target.parentElement.querySelector('[data-action=forward]');
+    const audioEl = this.getAudioEl();
+    const play = this.audioPlayer.querySelector('[data-action=play]');
+    const pause = this.audioPlayer.querySelector('[data-action=stop]');
+
+    const forward = this.audioPlayer.querySelector('[data-action=forward]');
     forward.removeAttribute('disabled');
 
     audioEl.play();
-    target.setAttribute('hidden', true);
+
+    play.setAttribute('hidden', true);
     pause.removeAttribute('hidden');
     pause.focus();
 
     if (audioEl.currentTime >= 10) {
-      audioEl.parentNode.querySelector('[data-action=back]').removeAttribute('disabled')
+      this.audioPlayer.querySelector('[data-action=back]').removeAttribute('disabled');
     }
 
     if (audioEl.currentTime < 4) {
-      audioEl.parentNode.querySelector('[data-action=back]').setAttribute('disabled', true)
+      this.audioPlayer.querySelector('[data-action=back]').setAttribute('disabled', true)
     }
   }
 
   stop(domEvent) {
+    if( !this.audioPlayer ) return;
     const { target } = domEvent;
-    const audioEl = target.parentElement.parentElement.previousElementSibling;
+    const audioEl = this.getAudioEl();
 
     audioEl.pause();
     target.setAttribute('hidden', true);
 
-    const play = target.parentElement.querySelector('[data-action=play]');
+    const play = this.audioPlayer.querySelector('[data-action=play]');
+
     play.removeAttribute('hidden');
     play.focus();
   }
 
-  back(domEvent) {
-    const { target } = domEvent;
-    const audioEl = target.parentElement.parentElement.previousElementSibling;
-    const forward = target.parentElement.querySelector('[data-action=forward]');
+  back() {
+    const audioEl = this.getAudioEl();
+    const forward = this.audioPlayer.querySelector('[data-action=forward]');
     forward.removeAttribute('disabled');
 
     const goback = audioEl.currentTime -= 10;
     return goback;
   }
 
-  forward(domEvent) {
-    const { target } = domEvent;
-    const audioEl = target.parentElement.parentElement.previousElementSibling;
-    const ahead = audioEl.currentTime += 10;
+  getAudioEl() {
+    if( !this.audioPlayer ) return;
+    return this.audioPlayer.querySelector('audio');
+  }
 
+  forward() {
+    const audioEl = this.getAudioEl();
+    const ahead = audioEl.currentTime += 10;
     return ahead;
   }
 
-  onDurationChange(domEvent) {
-    const dur = domEvent.target.parentElement.querySelector('label[for=audio-duration]');
-    const seconds = document.createTextNode(formatTime(domEvent.target.duration));
-    dur.replaceChild(seconds, dur.firstChild);
+  onDurationChange( domEvent ) {
+    const { duration } = domEvent.target;
+    const durLabel = this.audioPlayer.querySelector('label[for=audio-duration]');
+    const seconds = document.createTextNode( formatTime(duration) );
+    durLabel.replaceChild(seconds, durLabel.firstChild);
   }
 
   onTimeUpdate(domEvent) {
     const { target } = domEvent;
-    const current = target.parentElement.querySelector('output');
-    const controls = target.nextElementSibling
+    const { audioPlayer } = this;
+
+    const current = audioPlayer.querySelector('output');
     const time = reflectTime(target.currentTime, target.duration);
 
+    const backForward = audioPlayer.querySelectorAll('[data-action=back],[data-action=forward]');
+
     if (target.currentTime > 10) {
-      controls.querySelector('[data-action=back]').removeAttribute('disabled');
+      backForward[0].removeAttribute('disabled');
     } else {
-      controls.querySelector('[data-action=back]').setAttribute('disabled', true);
+      backForward[0].setAttribute('disabled', true);
     }
 
     if (target.currentTime >= target.duration) {
-      controls.querySelector('[data-action=forward]').setAttribute('disabled', true);
+      backForward[1].setAttribute('disabled', true);
     } else {
-      controls.querySelector('[data-action=forward]').removeAttribute('disabled');
+      backForward[1].removeAttribute('disabled');
     }
 
-    const range = controls.querySelector('[type=range]');
-    const progress = controls.querySelector('progress');
+    const range = audioPlayer.querySelector('[type=range]');
+    const progress = audioPlayer.querySelector('progress');
 
     range.value = time;
     progress.value = range.value;
 
     current.value = formatTime(target.currentTime);
+
   }
 
   makeAudio() {
-    const audio = document.createElement('audio');
-    if (this.hasAttribute('src')) {
-      audio.setAttribute('src', this.getAttribute('src'));
-    }
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('audio-player');
 
-    audio.addEventListener('durationchange', this.onDurationChange);
-    audio.addEventListener('timeupdate', this.onTimeUpdate);
+    wrapper.innerHTML = `<h2></h2>
+      <audio preload="metadata"></audio>
+      <form>
+        <p class="audio-player-track">
+          <output name="current-time" for="audio-progress"></output>
+          <progress value="0" id="audio-progress" name="audio-progress"></progress>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            value="0"
+            step="0.01"
+            name="audio-duration"
+            id="audio-duration"
+          >
+          <label for="audio-duration">-</label>
+        </p>
+        <p class="audio-player-controls">
+          <button type="button" aria-label="Go back 10 seconds" data-action="back">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Go back 10 seconds</title><path d="M4 5h3v10H4V5zm12 0v10l-9-5 9-5z">
+              </path>
+            </svg>
+          </button>
+          <button type="button" aria-label="Play audio" data-action="play">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Play audio</title>
+              <path d="M4 4l12 6-12 6z"></path>
+            </svg>
+          </button>
+          <button type="button" aria-label="Stop audio" data-action="stop" hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Pause audio</title>
+              <path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z"></path>
+            </svg>
+          </button>
+          <button type="button" aria-label="Go forward 10 seconds" data-action="forward">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Go forward 10 seconds</title>
+              <path d="M13 5h3v10h-3V5zM4 5l9 5-9 5V5z"></path>
+            </svg>
+          </button>
+        </p>
+        </form>`;
 
-    audio.addEventListener('play', () => {
-      const playButton = audio.parentElement.querySelector('[data-action=play]');
-      const click = new Event('click');
-      playButton.dispatchEvent(click);
+      this.audioPlayer = wrapper;
+  }
+
+  makeTitle() {
+    if( !this.audioPlayer ) return;
+    const title = this.audioPlayer.querySelector('h2');
+    title.appendChild( document.createTextNode( this.getTitle() ));
+  }
+
+  setTimeUpdates() {
+    const audioEl = this.getAudioEl();
+    audioEl.addEventListener('durationchange', this.onDurationChange );
+    audioEl.addEventListener('timeupdate', this.onTimeUpdate );
+  }
+
+  togglePlayPause() {
+    const audioEl = this.getAudioEl();
+    const playPause = this.audioPlayer.querySelectorAll('[data-action=play],[data-action=stop]');
+
+    playPause.forEach((p) => {
+      p.toggleAttribute('hidden');
     });
 
-    return audio;
+    // If the play button is hidden...
+    if( playPause[0].hidden ) {
+      audioEl.play();
+    } else {
+      audioEl.pause();
+    }
   }
 
   connectedCallback() {
+
     const shadow = this.attachShadow({ mode: 'open' });
     shadow.appendChild(this.setStyle());
 
-    const apWrapper = document.createElement('div');
-    apWrapper.setAttribute('class', 'audio-player');
+    this.makeAudio();
+    this.setSrc();
+    this.makeTitle();
+    this.makeTrack();
+    this.setControls();
+    this.setTimeUpdates();
 
-    const audio = this.makeAudio();
-    apWrapper.appendChild(this.makeTitle());
-    apWrapper.appendChild(audio);
-
-    const trackAndControls = document.createElement('form');
-
-    const track = this.makeTrack();
-    const controls = this.makeControls();
-
-    trackAndControls.appendChild(track);
-    trackAndControls.appendChild(controls);
-
-    apWrapper.appendChild(trackAndControls);
-    shadow.appendChild(apWrapper);
+    shadow.appendChild(this.audioPlayer);
 
     shadow.addEventListener('keydown', (e) => {
       if(shadow.activeElement.id === 'audio-duration' && e.code === 'Enter') {
-        audio.play();
+        this.togglePlayPause();
       }
     });
   }
