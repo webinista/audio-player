@@ -1,21 +1,3 @@
-function formatTime(seconds) {
-  const SECONDS_IN_MINUTE = 60;
-  const minutes = (seconds / SECONDS_IN_MINUTE);
-
-  const minutePart = Math.floor(minutes);
-  const sec = SECONDS_IN_MINUTE * (minutes - minutePart);
-
-  return `${minutePart}:${Math.round(sec).toString().padStart(2, 0)}`;
-}
-
-function soughtTime(value, duration) {
-  return Math.round( +value * duration );
-}
-
-function reflectTime(current, duration) {
-  return current / duration;
-}
-
 // Create a class for the element
 class AudioPlayer extends HTMLElement {
   observedAttributes = ['src', 'title'];
@@ -128,7 +110,7 @@ class AudioPlayer extends HTMLElement {
     scrub.addEventListener('input', (domEvent) => {
       const { target } = domEvent;
 
-      const seekTo = soughtTime( target.value, audio.duration );
+      const seekTo = this.soughtTime( target.value, audio.duration );
 
       if ('fastSeek' in audio) {
         audio.fastSeek(seekTo);
@@ -215,12 +197,28 @@ class AudioPlayer extends HTMLElement {
     return ahead;
   }
 
+  formatTime(seconds) {
+    const SECONDS_IN_MINUTE = 60;
+    const minutes = (seconds / SECONDS_IN_MINUTE);
+    const minutePart = Math.floor(minutes);
+    const sec = SECONDS_IN_MINUTE * (minutes - minutePart);
+    return `${minutePart}:${Math.round(sec).toString().padStart(2, 0)}`;
+  }
+  
+  soughtTime(value, duration) {
+    return Math.round( +value * duration );
+  }
+
+  reflectTime(current, duration) {
+    return current / duration;
+  }
+
   onDurationChange( domEvent ) {
     const { duration } = domEvent.target;
     const { audioPlayer } = this;
 
     const durLabel = audioPlayer.querySelector('label[for=audio-duration]');
-    const seconds = document.createTextNode( formatTime(duration) );
+    const seconds = document.createTextNode( this.formatTime(duration) );
     durLabel.replaceChild(seconds, durLabel.firstChild);
   }
 
@@ -229,7 +227,7 @@ class AudioPlayer extends HTMLElement {
     const { audioPlayer } = this;
 
     const current = audioPlayer.querySelector('output');
-    const time = reflectTime(target.currentTime, target.duration);
+    const time = this.reflectTime(target.currentTime, target.duration);
 
     const backForward = audioPlayer.querySelectorAll('[data-action=back],[data-action=forward]');
 
@@ -251,7 +249,7 @@ class AudioPlayer extends HTMLElement {
     range.value = time;
     progress.value = range.value;
 
-    current.value = formatTime(target.currentTime);
+    current.value = this.formatTime(target.currentTime);
 
   }
 
