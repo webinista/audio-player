@@ -8,8 +8,8 @@ function formatTime(seconds) {
   return `${minutePart}:${Math.round(sec).toString().padStart(2, 0)}`;
 }
 
-function currentTime(value, duration) {
-  return Math.round(+value * duration);
+function soughtTime(value, duration) {
+  return Math.round( +value * duration );
 }
 
 function reflectTime(current, duration) {
@@ -31,6 +31,58 @@ class AudioPlayer extends HTMLElement {
     this.onTimeUpdate = this.onTimeUpdate.bind( this );
   }
 
+  makeAudio() {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('audio-player');
+
+    wrapper.innerHTML = `<h2></h2>
+      <audio preload="metadata"></audio>
+      <form>
+        <p class="audio-player-track">
+          <output name="current-time" for="audio-progress"></output>
+          <progress value="0" id="audio-progress" name="audio-progress"></progress>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            value="0"
+            step="0.01"
+            name="audio-duration"
+            id="audio-duration"
+          >
+          <label for="audio-duration">-</label>
+        </p>
+        <p class="audio-player-controls">
+          <button type="button" title="Go back 10 seconds" aria-label="Go back 10 seconds" data-action="back">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Go back 10 seconds</title><path d="M4 5h3v10H4V5zm12 0v10l-9-5 9-5z">
+              </path>
+            </svg>
+          </button>
+          <button type="button" title="Play audio" aria-label="Play audio" data-action="play">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Play audio</title>
+              <path d="M4 4l12 6-12 6z"></path>
+            </svg>
+          </button>
+          <button type="button" title="Stop audio" aria-label="Stop audio" data-action="stop" hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Pause audio</title>
+              <path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z"></path>
+            </svg>
+          </button>
+          <button type="button" title="Go forward 10 seconds" aria-label="Go forward 10 seconds" data-action="forward">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+              <title>Go forward 10 seconds</title>
+              <path d="M13 5h3v10h-3V5zM4 5l9 5-9 5V5z"></path>
+            </svg>
+          </button>
+        </p>
+        </form>`;
+
+      this.audioPlayer = wrapper;
+  }
+
   setStyle() {
     const style = document.createElement('link');
     style.setAttribute('rel', 'stylesheet');
@@ -41,9 +93,14 @@ class AudioPlayer extends HTMLElement {
 
   getTitle() {
     let title = 'Listen to this post';
-    if (this.hasAttribute('title')) {
-      title = this.getAttribute('title');
+
+    if(
+      this.hasAttribute('postTitle') &&
+      typeof this.getAttribute('postTitle')  === 'string'
+    ) {
+      title = this.getAttribute('postTitle');
     }
+
     return title;
   }
 
@@ -60,14 +117,18 @@ class AudioPlayer extends HTMLElement {
   makeTrack() {
     if(!this.audioPlayer) return;
 
-    const curTime = this.audioPlayer.querySelector('output');
-    curTime.textContent = '0:00';
+    const { audioPlayer } = this;
 
-    const scrub = this.audioPlayer.querySelector('input');
+    const curTime = audioPlayer.querySelector('output');
+    curTime.textContent = '0:00';
+    const audio = audioPlayer.querySelector('audio');
+
+    const scrub = audioPlayer.querySelector('input');
+
     scrub.addEventListener('input', (domEvent) => {
       const { target } = domEvent;
-      const audio = target.parentElement.parentElement.previousElementSibling;
-      const seekTo = currentTime(domEvent.target.value, audio.duration);
+
+      const seekTo = soughtTime( target.value, audio.duration );
 
       if ('fastSeek' in audio) {
         audio.fastSeek(seekTo);
@@ -76,7 +137,7 @@ class AudioPlayer extends HTMLElement {
       }
     });
 
-    const label = this.audioPlayer.querySelector('label[for="audio-duration"]');
+    const label = audioPlayer.querySelector('[for="audio-duration"]');
     label.textContent = '0:00';
   }
 
@@ -96,11 +157,13 @@ class AudioPlayer extends HTMLElement {
   play() {
     if( !this.audioPlayer ) return;
 
-    const audioEl = this.getAudioEl();
-    const play = this.audioPlayer.querySelector('[data-action=play]');
-    const pause = this.audioPlayer.querySelector('[data-action=stop]');
+    const { audioPlayer } = this;
 
-    const forward = this.audioPlayer.querySelector('[data-action=forward]');
+    const audioEl = this.getAudioEl();
+    const play = audioPlayer.querySelector('[data-action=play]');
+    const pause = audioPlayer.querySelector('[data-action=stop]');
+
+    const forward = audioPlayer.querySelector('[data-action=forward]');
     forward.removeAttribute('disabled');
 
     audioEl.play();
@@ -110,11 +173,11 @@ class AudioPlayer extends HTMLElement {
     pause.focus();
 
     if (audioEl.currentTime >= 10) {
-      this.audioPlayer.querySelector('[data-action=back]').removeAttribute('disabled');
+      audioPlayer.querySelector('[data-action=back]').removeAttribute('disabled');
     }
 
     if (audioEl.currentTime < 4) {
-      this.audioPlayer.querySelector('[data-action=back]').setAttribute('disabled', true)
+      audioPlayer.querySelector('[data-action=back]').setAttribute('disabled', true)
     }
   }
 
@@ -154,7 +217,9 @@ class AudioPlayer extends HTMLElement {
 
   onDurationChange( domEvent ) {
     const { duration } = domEvent.target;
-    const durLabel = this.audioPlayer.querySelector('label[for=audio-duration]');
+    const { audioPlayer } = this;
+
+    const durLabel = audioPlayer.querySelector('label[for=audio-duration]');
     const seconds = document.createTextNode( formatTime(duration) );
     durLabel.replaceChild(seconds, durLabel.firstChild);
   }
@@ -190,61 +255,11 @@ class AudioPlayer extends HTMLElement {
 
   }
 
-  makeAudio() {
-    const wrapper = document.createElement('div');
-    wrapper.classList.add('audio-player');
-
-    wrapper.innerHTML = `<h2></h2>
-      <audio preload="metadata"></audio>
-      <form>
-        <p class="audio-player-track">
-          <output name="current-time" for="audio-progress"></output>
-          <progress value="0" id="audio-progress" name="audio-progress"></progress>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            value="0"
-            step="0.01"
-            name="audio-duration"
-            id="audio-duration"
-          >
-          <label for="audio-duration">-</label>
-        </p>
-        <p class="audio-player-controls">
-          <button type="button" aria-label="Go back 10 seconds" data-action="back">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <title>Go back 10 seconds</title><path d="M4 5h3v10H4V5zm12 0v10l-9-5 9-5z">
-              </path>
-            </svg>
-          </button>
-          <button type="button" aria-label="Play audio" data-action="play">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <title>Play audio</title>
-              <path d="M4 4l12 6-12 6z"></path>
-            </svg>
-          </button>
-          <button type="button" aria-label="Stop audio" data-action="stop" hidden="true">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <title>Pause audio</title>
-              <path d="M5 4h3v12H5V4zm7 0h3v12h-3V4z"></path>
-            </svg>
-          </button>
-          <button type="button" aria-label="Go forward 10 seconds" data-action="forward">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-              <title>Go forward 10 seconds</title>
-              <path d="M13 5h3v10h-3V5zM4 5l9 5-9 5V5z"></path>
-            </svg>
-          </button>
-        </p>
-        </form>`;
-
-      this.audioPlayer = wrapper;
-  }
-
   makeTitle() {
     if( !this.audioPlayer ) return;
-    const title = this.audioPlayer.querySelector('h2');
+    const { audioPlayer } = this;
+
+    const title = audioPlayer.querySelector('h2');
     title.appendChild( document.createTextNode( this.getTitle() ));
   }
 
@@ -256,10 +271,15 @@ class AudioPlayer extends HTMLElement {
 
   togglePlayPause() {
     const audioEl = this.getAudioEl();
-    const playPause = this.audioPlayer.querySelectorAll('[data-action=play],[data-action=stop]');
+    const { audioPlayer } = this;
+
+    const playPause = audioPlayer.querySelectorAll('[data-action=play],[data-action=stop]');
 
     playPause.forEach((p) => {
       p.toggleAttribute('hidden');
+      if( !p.hidden ) {
+        p.focus();
+      }
     });
 
     // If the play button is hidden...
@@ -273,7 +293,7 @@ class AudioPlayer extends HTMLElement {
   connectedCallback() {
 
     const shadow = this.attachShadow({ mode: 'open' });
-    shadow.appendChild(this.setStyle());
+    shadow.appendChild( this.setStyle() );
 
     this.makeAudio();
     this.setSrc();
@@ -285,7 +305,7 @@ class AudioPlayer extends HTMLElement {
     shadow.appendChild(this.audioPlayer);
 
     shadow.addEventListener('keydown', (e) => {
-      if(shadow.activeElement.id === 'audio-duration' && e.code === 'Enter') {
+      if(shadow.activeElement.id === 'audio-duration' && e.code === 'Space') {
         this.togglePlayPause();
       }
     });
